@@ -1,0 +1,12 @@
+node('Slave-Ansble') {
+    
+    stage('GitClone-Yaml') {
+      sh 'git clone https://github.com/anveshpamarthi/yaml.git' 
+      }
+	stage('RunPlaybook'){
+	  sh 'ansible-playbook yaml/jenkins.yaml'
+	}
+	stage('Finised Task') {
+      sh 'echo playbook done'
+	}
+	}
