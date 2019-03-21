@@ -1,0 +1,57 @@
+---
+- name: Install Jenkins
+  hosts: demo
+  tasks:
+    - name: Install yum
+      yum:
+        name:
+          - wget
+          - java-1.8.0-openjdk
+
+    - name: Download jenkins.repo
+      get_url:
+        url: http://pkg.jenkins-ci.org/redhat-stable/jenkins.repo
+        dest: /etc/yum.repos.d/jenkins.repo
+
+    - name: Import Jenkins Key
+      rpm_key:
+        state: present
+        key: https://jenkins-ci.org/redhat/jenkins-ci.org.key
+
+    - name: Install Jenkins
+      yum:
+        name: jenkins
+        state: present
+
+    - name: Start & Enable Jenkins
+      service:
+        name: jenkins
+        state: started
+        enabled: yes
+        
+    - name: Get init password Jenkins
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      changed_when: false
+      register: result
+    
+    - name: Print init password Jenkins
+      debug:
+        var: result.stdout   
+
+    - name: Replacing Jenkins user to root
+      lineinfile:
+        path: /etc/sysconfig/jenkins
+        backrefs: yes
+        regexp: '^(JENKINS_USER)'
+        line: '\1 ="root"'
+        state: present
+        
+    - name: Changing Ownership to root
+      file: path={{ item }} owner=root group=root mode=0755
+      with_items:
+        - /var/cache/jenkins
+        - /var/lib/jenkins
+        - /var/log/jenkins
+
+        
+        
