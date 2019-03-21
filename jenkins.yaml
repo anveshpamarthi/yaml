@@ -18,7 +18,7 @@
         state: present
         key: https://jenkins-ci.org/redhat/jenkins-ci.org.key
 
-    - name: Install Jenkins
+    - name: Installing Jenkins
       yum:
         name: jenkins
         state: present
