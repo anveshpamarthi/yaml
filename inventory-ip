@@ -1,0 +1,13 @@
+node('slave'){
+    stage('Launching EC2'){
+    sh '/root/.local/bin/aws s3 cp s3://flipgo/practice-ec2.yml .'    
+    sh '/root/.local/bin/aws cloudformation create-stack --stack-name EC2-01 --template-body file://practice-ec2.yml --region=us-east-1'
+    }
+    stage('creating inventory'){
+    sh 'touch inventory'
+    sh 'echo "[demo]" > inventory'
+    }
+    stage('fetching ip'){
+    sh '/root/.local/bin/aws ec2 describe-instances --query "Reservations[].Instances[][PublicIpAddress]" | grep -o -P "\d+\.\d+\.\d+\.\d+" >> inventory'
+    }
+    }
