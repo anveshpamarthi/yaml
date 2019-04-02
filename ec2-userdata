@@ -1,0 +1,42 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: TargetNode
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0d5ad92b24178ed0e
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-05323c94c124a47e7
+Resources:
+  Argus01ServicesModelOrganizationApi:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0080e4c5bc078760e
+      KeyName: FlipGo
+      InstanceType: t2.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !Ref Subnet1
+          GroupSet:
+            - !Ref MySecurityGroup
+      Tags:
+      - Key: Name
+        Value: !Sub "${EnvironmentName}"
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo su -
+            echo "root123" | passwd "root" --stdin
+            sed -i -e '/^\#PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i -e '/^PasswordAuthentication/s/^.*$/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            /etc/init.d/sshd restart
+            yum remove java -y
+            
+            
+
+            
+            
