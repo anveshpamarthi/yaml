@@ -1,0 +1,24 @@
+node('aws-node'){
+    stage('Launching EC2'){
+    sh 'aws s3 cp s3://flipgo/ec2-userdata.yml .'    
+    sh 'aws cloudformation create-stack --stack-name EC2-01 --template-body file://ec2-userdata.yml --region=us-east-1'
+    sh 'sleep 30s'
+    }
+    stage('Creating inventory'){
+    sh 'touch inventory'
+    sh 'echo "[demo]" > inventory'
+    }
+    stage('Fetching ip'){
+    sh 'aws ec2 describe-instances --filter Name=tag:Name,Values=TargetNode | grep ASSOCIATION | head -n 1 | awk \'{print $3}\' >> inventory'
+    }
+    stage('git repo cloning'){
+    sh 'git clone https://github.com/anveshpamarthi/yaml.git'    
+    }
+	stage('ssh copying'){
+	sh 'sleep 60s'    
+	sh '/root/targetip.sh'
+	}
+    stage('Run Ansible playbook'){
+    sh 'ansible-playbook -i inventory yaml/jenkins.yaml'    
+    }
+    }
