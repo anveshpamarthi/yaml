@@ -2,3 +2,10 @@ cat /var/lib/jenkins/workspace/Target-Jenkins02/inventory | while read line
 do
          sshpass -p "root123" ssh-copy-id -o StrictHostKeyChecking=no root@$line
 done
+=======================================================================================================
+With SSM parameter concept script
+
+x=`aws ec2 describe-instances --filter Name=tag:Name,Values=TargetNode | grep ASSOCIATION | head -n 1 | awk '{print $3}'`
+echo $x
+y=`aws ssm get-parameter --name Jenkinspasswd | awk '{print $6}'`
+sshpass -p "$y" ssh-copy-id -o StrictHostKeyChecking=no root@$x
