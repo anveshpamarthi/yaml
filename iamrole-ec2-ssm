@@ -1,0 +1,61 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Parameters:
+  EnvironmentName:
+    Type: String
+    Default: TargetNode
+  Subnet1:
+    Type: AWS::EC2::Subnet::Id
+    Default: subnet-0ce90762c7741d474
+  MySecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Default: sg-042a6922c52125193
+Resources:
+  IAMSSM:
+    Type: "AWS::IAM::Role"
+    Properties:
+      ManagedPolicyArns: 
+        - "arn:aws:iam::aws:policy/AmazonSSMFullAccess"
+      RoleName: IAMSSM
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "ec2.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+  IAMSSMInstanceProfile:
+    Type: "AWS::IAM::InstanceProfile"
+    Properties:
+      Path: "/"
+      Roles:
+        -
+          Ref: "IAMSSM"
+  Argus01ServicesModelOrganizationApi:
+    Type: AWS::EC2::Instance
+    Properties:
+      IamInstanceProfile: !Ref IAMSSMInstanceProfile
+      ImageId: ami-0889b8a448de4fc44    
+      KeyName: shopkey
+      InstanceType: t2.micro
+      NetworkInterfaces:
+        - AssociatePublicIpAddress: "true"
+          DeviceIndex: "0"
+          SubnetId: !Ref Subnet1
+          GroupSet:
+            - !Ref MySecurityGroup
+      Tags:
+      - Key: Name
+        Value: !Sub "${EnvironmentName}"
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            sudo su -
+            echo "root123" | passwd "root" --stdin
+            sed -i -e '/^\#PermitRootLogin/s/^.*$/PermitRootLogin yes/' /etc/ssh/sshd_config
+            sed -i -e '/^PasswordAuthentication/s/^.*$/PasswordAuthentication yes/' /etc/ssh/sshd_config
+            systemctl restart sshd
